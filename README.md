@@ -1,23 +1,31 @@
 # Personal Expense Tracker
 
-A command-line application built with Python and SQLite for managing personal income and expenses. It allows users to record transactions, monitor their spending, calculate their balance, and visualise financial activities using charts.
+A Python-based personal finance application that helps users record income and expenses, monitor their financial balance, and visualize spending patterns. The project includes a command-line interface (CLI) and an interactive web dashboard built with Streamlit.
 
 ## Features
 
+### CLI Application
 - Add income and expense transactions.
 - View all recorded transactions.
-- Search transactions by category, type, or date.
-- Calculate total income, expenses, and available balance.
-- View monthly financial summaries.
-- Visualise expenses by category.
-- Compare total income against expenses.
-- Input validation and error handling.
-- Persistent data storage using SQLite.
+- Search transactions.
+- View financial summaries.
+- Generate expense category charts.
+- Compare income and expenses.
+
+### Streamlit Dashboard
+- View total income, expenses, and balance.
+- Monitor current-month financial activity.
+- Visualize expenses by category.
+- Compare income and expenses using charts.
+- Add new transactions through a web form.
+- View and filter transaction history.
+- Display transaction amounts in Nigerian Naira.
 
 ## Technologies Used
 
 - Python
 - SQLite
+- Streamlit
 - Matplotlib
 
 ## Project Structure
@@ -25,6 +33,7 @@ A command-line application built with Python and SQLite for managing personal in
 ```text
 personal-expense-tracker/
 │
+├── app.py
 ├── main.py
 ├── database.py
 ├── transactions.py
@@ -35,7 +44,7 @@ personal-expense-tracker/
 └── .gitignore
 ```
 
-## Installation and Setup
+## Installation
 
 1. Clone the repository:
 
@@ -49,42 +58,43 @@ git clone https://github.com/beo-01/personal-expense-tracker.git
 cd personal-expense-tracker
 ```
 
-3. Create a virtual environment:
+3. Create and activate a virtual environment:
 
 ```bash
-python -m venv .venv
+python -m venv .expense_env
 ```
 
-4. Activate the virtual environment:
-
-**Windows PowerShell:**
+Windows PowerShell:
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
+.\.expense_env\Scripts\Activate.ps1
 ```
 
-5. Install dependencies:
+4. Install the dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-6. Run the application:
+## Running the Application
+
+### Run the CLI version
 
 ```bash
 python main.py
 ```
 
+### Run the Streamlit dashboard
+
+```bash
+python -m streamlit run app.py
+```
+
+The dashboard will open in your browser.
+
 ## Database
 
-The application uses SQLite to store transaction records. The database and its table are automatically created when the application starts.
-
-## Future Improvements
-
-- Add transaction editing and deletion.
-- Add monthly and yearly spending reports.
-- Develop a Streamlit web dashboard.
-- Export financial reports to CSV.
+The application uses SQLite to store transaction records. The database is created locally when the database setup is run. The database file is excluded from Git tracking.
 
 ## Author
 
