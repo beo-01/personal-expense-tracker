@@ -1,9 +1,15 @@
-
 import streamlit as st
-import sqlite3
 import matplotlib.pyplot as plt
 from datetime import date
-from database import create_connection, create_table
+
+from supabase_client import get_supabase_client
+from auth import (
+    sign_up,
+    sign_in,
+    sign_out,
+    reset_password,
+    update_password
+)
 
 
 # Page configuration
@@ -13,8 +19,265 @@ st.set_page_config(
     layout="wide"
 )
 
-# Create the database table if it doesn't exist
-create_table()
+# Connect to Supabase
+supabase = get_supabase_client()
+
+
+
+# Check for password recovery
+if "code" in st.query_params:
+
+    recovery_code = st.query_params["code"]
+
+    try:
+        response = supabase.auth.exchange_code_for_session(
+            {"auth_code": recovery_code}
+        )
+
+        st.session_state["access_token"] = response.session.access_token
+        st.session_state["refresh_token"] = response.session.refresh_token
+        st.session_state["password_recovery"] = True
+
+        st.query_params.clear()
+        st.rerun()
+
+    except Exception as error:
+        st.error(f"Password recovery failed: {error}")
+
+
+# Password recovery screen
+if st.session_state.get("password_recovery"):
+
+    st.title("Reset Your Password")
+
+    st.write("Enter your new password below.")
+
+    with st.form("new_password_form"):
+
+        new_password = st.text_input(
+            "New Password",
+            type="password"
+        )
+
+        confirm_password = st.text_input(
+            "Confirm New Password",
+            type="password"
+        )
+
+        submitted = st.form_submit_button("Update Password")
+
+        if submitted:
+
+            if len(new_password) < 8:
+                st.error("Password must contain at least 8 characters.")
+
+            elif new_password != confirm_password:
+                st.error("Passwords do not match.")
+
+            else:
+
+                try:
+                    update_password(supabase, new_password)
+
+                    st.session_state.pop("access_token", None)
+                    st.session_state.pop("refresh_token", None)
+                    st.session_state.pop("password_recovery", None)
+
+                    st.success("Password updated successfully!")
+                    st.rerun()
+
+                except Exception as error:
+                    st.error(f"Could not update password: {error}")
+
+    st.stop()
+
+
+
+
+# Check whether the user is logged in
+if "access_token" not in st.session_state:
+
+    st.title("💰 Personal Expense Tracker")
+
+    st.write("Welcome! Please log in or create an account.")
+
+    login_tab, signup_tab = st.tabs(["Login", "Create Account"])
+
+    # LOGIN SECTION
+    with login_tab:
+
+        st.subheader("Welcome Back")
+
+        with st.form("login_form"):
+
+            email = st.text_input("Email Address")
+
+            password = st.text_input(
+                "Password",
+                type="password"
+            )
+
+            login_button = st.form_submit_button("Login")
+
+            if login_button:
+
+                try:
+                    response = sign_in(
+                        supabase,
+                        email,
+                        password
+                    )
+
+                    session = response.session
+
+                    if session:
+                        st.session_state["access_token"] = session.access_token
+                        st.session_state["refresh_token"] = session.refresh_token
+
+                        st.success("Login successful!")
+                        st.rerun()
+
+                    else:
+                        st.error("Login failed. Please try again.")
+
+                except Exception as error:
+                    st.error(f"Login failed: {error}")
+
+
+
+
+        st.divider()
+
+        st.write("Forgot your password?")
+
+        with st.form("forgot_password_form"):
+
+            reset_email = st.text_input(
+                "Enter your registered email"
+            )
+
+            reset_button = st.form_submit_button(
+                "Send Reset Link"
+            )
+
+            if reset_button:
+
+                if not reset_email.strip():
+                    st.error("Please enter your email address.")
+
+                else:
+
+                    try:
+                        reset_password(
+                            supabase,
+                            reset_email.strip(),
+                            "https://personal-expense-trackerr.streamlit.app/"
+                        )
+
+                        st.success(
+                            "If an account exists for that email, "
+                            "a password-reset email will be sent."
+                        )
+
+                    except Exception as error:
+                        st.error(f"Password reset failed: {error}")
+
+
+    # REGISTRATION SECTION
+    with signup_tab:
+
+        st.subheader("Create Your Account")
+
+        with st.form("signup_form"):
+
+            new_email = st.text_input("Email Address")
+
+            new_password = st.text_input(
+                "Password",
+                type="password"
+            )
+
+            confirm_password = st.text_input(
+                "Confirm Password",
+                type="password"
+            )
+
+            signup_button = st.form_submit_button("Create Account")
+
+            if signup_button:
+
+                if not new_email.strip():
+                    st.error("Please enter your email address.")
+
+                elif len(new_password) < 8:
+                    st.error("Password must contain at least 8 characters.")
+
+                elif new_password != confirm_password:
+                    st.error("Passwords do not match.")
+
+                else:
+
+                    try:
+                        response = sign_up(
+                            supabase,
+                            new_email.strip(),
+                            new_password
+                        )
+
+                        if response.session:
+                            st.session_state["access_token"] = response.session.access_token
+                            st.session_state["refresh_token"] = response.session.refresh_token
+
+                            st.success("Account created successfully!")
+                            st.rerun()
+
+                        else:
+                            st.success(
+                                "Account created! Please check your email "
+                                "to confirm your account before logging in."
+                            )
+
+                    except Exception as error:
+                        st.error(f"Registration failed: {error}")
+
+    st.stop()
+
+
+
+# Logout section
+with st.sidebar:
+
+    st.success("You are logged in!")
+
+    if st.button("Logout"):
+
+        try:
+            sign_out(supabase)
+
+        finally:
+            st.session_state.pop("access_token", None)
+            st.session_state.pop("refresh_token", None)
+
+            st.rerun()
+
+
+
+
+# Restore the user's Supabase session after a rerun
+if (
+    "access_token" in st.session_state
+    and "refresh_token" in st.session_state
+):
+    try:
+        supabase.auth.set_session(
+            st.session_state["access_token"],
+            st.session_state["refresh_token"]
+        )
+    except Exception:
+        st.session_state.pop("access_token", None)
+        st.session_state.pop("refresh_token", None)
+
+
 
 
 st.markdown("""
@@ -63,142 +326,142 @@ st.markdown("""
 
 
 # Get financial summary
-def get_financial_summary():
 
-    connection = create_connection()
+# Fetch transactions belonging to the logged-in user
+def get_user_transactions():
 
     try:
-        cursor = connection.cursor()
+        response = (
+            supabase.table("transactions")
+            .select("*")
+            .order("transaction_date", desc=True)
+            .order("id", desc=True)
+            .execute()
+        )
 
-        cursor.execute("""
-            SELECT
-                COALESCE(SUM(CASE
-                    WHEN transaction_type = 'income'
-                    THEN amount ELSE 0 END), 0),
-                COALESCE(SUM(CASE
-                    WHEN transaction_type = 'expense'
-                    THEN amount ELSE 0 END), 0)
-            FROM transactions
-        """)
+        return response.data or []
 
-        total_income, total_expenses = cursor.fetchone()
-
-        current_month = date.today().strftime("%Y-%m")
-
-        cursor.execute("""
-            SELECT
-                COALESCE(SUM(CASE
-                    WHEN transaction_type = 'income'
-                    THEN amount ELSE 0 END), 0),
-                COALESCE(SUM(CASE
-                    WHEN transaction_type = 'expense'
-                    THEN amount ELSE 0 END), 0)
-            FROM transactions
-            WHERE strftime('%Y-%m', transaction_date) = ?
-        """, (current_month,))
-
-        monthly_income, monthly_expenses = cursor.fetchone()
-
-        return {
-            "total_income": total_income,
-            "total_expenses": total_expenses,
-            "balance": total_income - total_expenses,
-            "monthly_income": monthly_income,
-            "monthly_expenses": monthly_expenses,
-            "monthly_balance": monthly_income - monthly_expenses
-        }
-
-    except sqlite3.Error as error:
+    except Exception as error:
         st.error(f"Database error: {error}")
-        return None
+        return []
 
-    finally:
-        connection.close()
+
+# Get financial summary
+def get_financial_summary():
+
+    transactions = get_user_transactions()
+
+    total_income = 0
+    total_expenses = 0
+
+    monthly_income = 0
+    monthly_expenses = 0
+
+    current_month = date.today().strftime("%Y-%m")
+
+    for transaction in transactions:
+
+        amount = float(transaction["amount"])
+
+        transaction_type = transaction["transaction_type"]
+
+        transaction_date = str(transaction["transaction_date"])
+
+        if transaction_type == "income":
+            total_income += amount
+
+            if transaction_date.startswith(current_month):
+                monthly_income += amount
+
+        elif transaction_type == "expense":
+            total_expenses += amount
+
+            if transaction_date.startswith(current_month):
+                monthly_expenses += amount
+
+    return {
+        "total_income": total_income,
+        "total_expenses": total_expenses,
+        "balance": total_income - total_expenses,
+        "monthly_income": monthly_income,
+        "monthly_expenses": monthly_expenses,
+        "monthly_balance": monthly_income - monthly_expenses
+    }
 
 
 # Get expenses grouped by category
 def get_expenses_by_category():
 
-    connection = create_connection()
+    transactions = get_user_transactions()
+
+    category_totals = {}
+
+    for transaction in transactions:
+
+        if transaction["transaction_type"] == "expense":
+
+            category = transaction["category"]
+
+            amount = float(transaction["amount"])
+
+            if category in category_totals:
+                category_totals[category] += amount
+
+            else:
+                category_totals[category] = amount
+
+    results = sorted(
+        category_totals.items(),
+        key=lambda item: item[1],
+        reverse=True
+    )
+
+    return results
+
+
+# Save a new transaction
+def save_transaction(
+    transaction_type,
+    category,
+    amount,
+    description,
+    transaction_date
+):
 
     try:
-        cursor = connection.cursor()
 
-        cursor.execute("""
-            SELECT category, SUM(amount)
-            FROM transactions
-            WHERE transaction_type = 'expense'
-            GROUP BY category
-            ORDER BY SUM(amount) DESC
-        """)
-
-        return cursor.fetchall()
-
-    except sqlite3.Error as error:
-        st.error(f"Database error: {error}")
-        return []
-
-    finally:
-        connection.close()
-
-
-
-def save_transaction(transaction_type, category, amount, description, transaction_date):
-
-    connection = create_connection()
-
-    try:
-        cursor = connection.cursor()
-
-        cursor.execute("""
-            INSERT INTO transactions
-            (transaction_type, category, amount, description, transaction_date)
-            VALUES (?, ?, ?, ?, ?)
-        """, (
-            transaction_type,
-            category,
-            amount,
-            description,
-            transaction_date
-        ))
-
-        connection.commit()
+        supabase.table("transactions").insert({
+            "transaction_type": transaction_type,
+            "category": category,
+            "amount": amount,
+            "description": description,
+            "transaction_date": transaction_date
+        }).execute()
 
         return True
 
-    except sqlite3.Error as error:
-        st.error(f"Database error: {error}")
+    except Exception as error:
+        st.error(f"Could not save transaction: {error}")
         return False
 
-    finally:
-        connection.close()
 
-
-
+# Get all transactions
 def get_all_transactions():
 
-    connection = create_connection()
+    transactions = get_user_transactions()
 
-    try:
-        cursor = connection.cursor()
+    return [
+        (
+            transaction["id"],
+            transaction["transaction_type"],
+            transaction["category"],
+            transaction["amount"],
+            transaction["description"],
+            transaction["transaction_date"]
+        )
+        for transaction in transactions
+    ]
 
-        cursor.execute("""
-            SELECT id, transaction_type, category, amount,
-                   description, transaction_date
-            FROM transactions
-            ORDER BY transaction_date DESC, id DESC
-        """)
-
-        transactions = cursor.fetchall()
-
-        return transactions
-
-    except sqlite3.Error as error:
-        st.error(f"Database error: {error}")
-        return []
-
-    finally:
-        connection.close()
 
 
 
