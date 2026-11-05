@@ -3,7 +3,7 @@ import streamlit as st
 import sqlite3
 import matplotlib.pyplot as plt
 from datetime import date
-from database import create_connection
+from database import create_connection, create_table
 
 
 # Page configuration
@@ -12,6 +12,9 @@ st.set_page_config(
     page_icon="💰",
     layout="wide"
 )
+
+# Create the database table if it doesn't exist
+create_table()
 
 
 st.markdown("""
