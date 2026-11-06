@@ -83,8 +83,8 @@ pip install -r requirements.txt
 Create a `.streamlit/secrets.toml` file and add your Supabase project credentials:
 
 ```toml
-SUPABASE_URL = "https://qmpribmyyosfslsrgzie.supabase.co"
-SUPABASE_KEY = "sb_publishable_gKhR-oH-pkuEtgi9kYGBIw_-pRr_haX"
+SUPABASE_URL = "your-supabase-project-url"
+SUPABASE_KEY = "your-supabase-publishable-key"
 ```
 
 Never upload your credentials or secrets to GitHub.
@@ -96,19 +96,21 @@ streamlit run app.py
 ```
 
 
+
 ## Application Screenshots
 
 ### Login Page
 ![Login Page](screenshots/login.png)
 
 ### Financial Dashboard
-![Dashboard](screenshots/overview.png)
+![Financial Dashboard](screenshots/overview.png)
 
 ### Add Transaction
 ![Add Transaction](screenshots/add-transaction.png)
 
 ### Transaction History
 ![Transaction History](screenshots/transaction-history.png)
+
 
 
 ## Database
