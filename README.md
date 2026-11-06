@@ -1,32 +1,34 @@
-# Personal Expense Tracker
+# Personal Expense Tracker 💰
 
-A Python-based personal finance application that helps users record income and expenses, monitor their financial balance, and visualize spending patterns. The project includes a command-line interface (CLI) and an interactive web dashboard built with Streamlit.
+A Python-based expense tracking application that helps users manage their income, monitor expenses, and keep track of their financial activities.
+
+The project includes a command-line version built with SQLite and a web-based version built with Streamlit and Supabase.
 
 ## Features
 
-### CLI Application
-- Add income and expense transactions.
-- View all recorded transactions.
-- Search transactions.
-- View financial summaries.
-- Generate expense category charts.
-- Compare income and expenses.
-
-### Streamlit Dashboard
-- View total income, expenses, and balance.
-- Monitor current-month financial activity.
-- Visualize expenses by category.
-- Compare income and expenses using charts.
-- Add new transactions through a web form.
-- View and filter transaction history.
-- Display transaction amounts in Nigerian Naira.
+- User registration and email/password login
+- Secure user authentication
+- Add income and expense transactions
+- Categorize financial transactions
+- View transaction history
+- Filter transactions by type
+- View total income, expenses, and available balance
+- Monthly financial summaries
+- Visual financial analytics and charts
+- User-specific transaction records
 
 ## Technologies Used
 
 - Python
-- SQLite
 - Streamlit
+- SQLite
+- Supabase (PostgreSQL)
 - Matplotlib
+- Git and GitHub
+
+## Live Application
+
+[Open Personal Expense Tracker](https://personal-expense-trackerr.streamlit.app/)
 
 ## Project Structure
 
@@ -34,35 +36,35 @@ A Python-based personal finance application that helps users record income and e
 personal-expense-tracker/
 │
 ├── app.py
-├── main.py
+├── auth.py
 ├── database.py
-├── transactions.py
-├── reports.py
-├── charts.py
+├── supabase_client.py
 ├── requirements.txt
-├── README.md
-└── .gitignore
+├── .gitignore
+└── README.md
 ```
 
-## Installation
+## Installation and Setup
 
-1. Clone the repository:
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/beo-01/personal-expense-tracker.git
 ```
 
-2. Navigate into the project folder:
+### 2. Navigate into the project folder
 
 ```bash
 cd personal-expense-tracker
 ```
 
-3. Create and activate a virtual environment:
+### 3. Create a virtual environment
 
 ```bash
 python -m venv .expense_env
 ```
+
+### 4. Activate the virtual environment
 
 Windows PowerShell:
 
@@ -70,34 +72,47 @@ Windows PowerShell:
 .\.expense_env\Scripts\Activate.ps1
 ```
 
-4. Install the dependencies:
+### 5. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Running the Application
+### 6. Configure Supabase
 
-### Run the CLI version
+Create a `.streamlit/secrets.toml` file and add your Supabase project credentials:
 
-```bash
-python main.py
+```toml
+SUPABASE_URL = "https://qmpribmyyosfslsrgzie.supabase.co"
+SUPABASE_KEY = "sb_publishable_gKhR-oH-pkuEtgi9kYGBIw_-pRr_haX"
 ```
 
-### Run the Streamlit dashboard
+Never upload your credentials or secrets to GitHub.
+
+### 7. Run the application
 
 ```bash
-python -m streamlit run app.py
+streamlit run app.py
 ```
-
-The dashboard will open in your browser.
 
 ## Database
 
-The application uses SQLite to store transaction records. The database is created locally when the database setup is run. The database file is excluded from Git tracking.
+The web application uses Supabase PostgreSQL to store transaction records.
+
+Row Level Security (RLS) policies ensure that authenticated users can access only their own transactions.
+
+The command-line version uses SQLite for local data storage.
+
+## Future Improvements
+
+- Improved password recovery experience
+- Monthly and yearly financial reports
+- Budget management
+- Export transactions to CSV
+- Improved dashboard design
 
 ## Author
 
 **Bolaji Olatunji**
 
-GitHub: [beo-01](https://github.com/beo-01)
+GitHub: [@beo-01](https://github.com/beo-01)
