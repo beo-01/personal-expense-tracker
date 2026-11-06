@@ -95,6 +95,22 @@ Never upload your credentials or secrets to GitHub.
 streamlit run app.py
 ```
 
+
+## Application Screenshots
+
+### Login Page
+![Login Page](screenshots/login.png)
+
+### Financial Dashboard
+![Dashboard](screenshots/overview.png)
+
+### Add Transaction
+![Add Transaction](screenshots/add-transaction.png)
+
+### Transaction History
+![Transaction History](screenshots/transaction-history.png)
+
+
 ## Database
 
 The web application uses Supabase PostgreSQL to store transaction records.
